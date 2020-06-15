@@ -1,0 +1,9 @@
+{
+  "name": "nest-update-notifier",
+  "description": "desc",
+  "version": "0.1.0",
+  "stable": false,
+  "files": [
+    "mod.ts"
+  ]
+}
