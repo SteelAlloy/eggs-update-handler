@@ -1,8 +1,10 @@
-import { semver } from "./deps.ts"
+import boxConsole from "./box.ts";
+import * as color from "https://deno.land/std/fmt/colors.ts";
 
-const x = semver.coerce("42.6.7.9.3-alpha") || "0.0.1"
-const y = semver.coerce("v2.0") || "0.0.1"
+let msg = `New ${color.yellow("patch")} version of ${
+  color.red("box-console")
+} available! ${color.red("0.1.0")} -> ${"0.1.1"}`;
+let tip = `Registry ${color.cyan("https://github.com/snayan/box-console")}`;
+let install = `Run ${color.green("npm i " + "box-console")} to update`;
 
-console.log(x)
-console.log(y)
-console.log(semver.gt(x, y))
+console.log(boxConsole([msg, tip, install]))

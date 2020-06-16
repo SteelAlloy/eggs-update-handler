@@ -5,7 +5,7 @@ const oneDay = 1000 * 60 * 60 * 24;
 export class UpdateNotifier {
   currentVersion = "";
   lastUpdateCheck = Date.now();
-  updateCheckInterval = oneDay;
+  updateCheckInterval = 5;
 
   constructor(public execName: string, public moduleName: string) {}
 
@@ -58,16 +58,18 @@ export class UpdateNotifier {
   async checkForUpdate() {
     if(this.needCheck()) {
       const latestVersion = await this.getLatestVersionFromNestRegistry()
-      const latest = semver.coerce(latestVersion) || "0.0.1"
       const current = semver.coerce(this.currentVersion) || "0.0.1"
+      const latest = semver.coerce(latestVersion) || "0.0.1"
 
       if(semver.lt(current, latest)) {
-        this.notify()
+        const from = (typeof current === "string" ? current : current.version)
+        const to = (typeof latest === "string" ? latest : latest.version)
+        this.notify(from, to)
       }
     }
   }
 
-  notify() {
-    console.log("Update available!")
+  notify(from: string, to: string) {
+    console.log(`Update available! from ${from} to ${to}`)
   }
 }
