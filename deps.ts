@@ -1,2 +1,4 @@
-export { writeJson } from "https://deno.land/std/fs/write_json.ts"
-export { readJson } from "https://deno.land/std/fs/read_json.ts"
+export { writeJson } from "https://deno.land/std@v0.56.0/fs/write_json.ts"
+export { readJson } from "https://deno.land/std@v0.56.0/fs/read_json.ts"
+export * as path from "https://deno.land/std@v0.56.0/path/mod.ts";
+export * as semver from "https://deno.land/x/semver@v1.0.0/mod.ts";
