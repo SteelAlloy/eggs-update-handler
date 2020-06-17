@@ -1,9 +1,9 @@
 import { UpdateNotifier } from "./update.ts";
 
 const onWindows = Deno.build.os === "windows";
-const [execName, moduleURL, ...args] = Deno.args;
+const [execName, updateCheckInterval, ...args] = Deno.args;
 
-if (!moduleURL || !execName) {
+if (!execName) {
   console.log("Error, no module");
   Deno.exit(1);
 }
@@ -18,7 +18,7 @@ const process = Deno.run({
 const status = await process.status();
 process.close();
 
-const notifier = new UpdateNotifier(execName, moduleURL);
+const notifier = new UpdateNotifier(execName, Number.parseInt(updateCheckInterval));
 
 await notifier.init();
 await notifier.checkForUpdate();

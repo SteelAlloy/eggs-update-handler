@@ -1,13 +1,18 @@
-import { readJson, writeJson, path, semver } from "./deps.ts";
-
-const oneDay = 1000 * 60 * 60 * 24;
+import { readJson, writeJson, path, semver, colors, Table } from "./deps.ts";
+import { getLatestVersion } from "./registries.ts";
 
 export class UpdateNotifier {
+  moduleName = "";
+  owner = "";
   currentVersion = "";
+  registry = "";
+  installationArgs: string[] = [];
   lastUpdateCheck = Date.now();
-  updateCheckInterval = 5;
 
-  constructor(public execName: string, public moduleURL: string) {}
+  constructor(
+    public execName: string,
+    public updateCheckInterval: number,
+  ) {}
 
   async readConfig(): Promise<any> {
     return readJson(this.configPath());
@@ -19,7 +24,7 @@ export class UpdateNotifier {
 
   configPath() {
     const homedir = Deno.dir("home") || "/";
-    return path.join(homedir, "/.eggs-global-module-versions.json");
+    return path.join(homedir, "/.eggs-global-modules.json");
   }
 
   needCheck() {
@@ -31,7 +36,11 @@ export class UpdateNotifier {
     const module = config[this.execName];
 
     if (module) {
+      this.moduleName = module.moduleName;
+      this.owner = module.owner;
       this.currentVersion = module.version;
+      this.registry = module.registry;
+      this.installationArgs = module.args;
     } else {
       throw new Error("Some fields are missing in the global config file.");
     }
@@ -47,29 +56,36 @@ export class UpdateNotifier {
     }
   }
 
-  async getLatestVersionFromNestRegistry(): Promise<string> {
-    const res = await fetch(
-      "https://x.nest.land/api/package/" + this.moduleURL,
-    );
-    const json = await res.json();
-    return json.latestVersion.split("@")[1];
-  }
-
   async checkForUpdate() {
-    if(this.needCheck()) {
-      const latestVersion = await this.getLatestVersionFromNestRegistry()
-      const current = semver.coerce(this.currentVersion) || "0.0.1"
-      const latest = semver.coerce(latestVersion) || "0.0.1"
+    if (this.needCheck()) {
+      const latestVersion = await getLatestVersion(
+        this.registry,
+        this.moduleName,
+        this.owner,
+      );
+      const current = semver.coerce(this.currentVersion) || "0.0.1";
+      const latest = semver.coerce(latestVersion) || "0.0.1";
 
-      if(semver.lt(current, latest)) {
-        const from = (typeof current === "string" ? current : current.version)
-        const to = (typeof latest === "string" ? latest : latest.version)
-        this.notify(from, to)
+      if (semver.lt(current, latest)) {
+        const from = (typeof current === "string" ? current : current.version);
+        const to = (typeof latest === "string" ? latest : latest.version);
+        this.notify(from, to);
       }
     }
   }
 
   notify(from: string, to: string) {
-    console.log(`Update available! from ${from} to ${to}`)
+    const notification = `New version of ${
+      colors.red(this.moduleName)
+    } available! ${colors.yellow(from)} → ${colors.green(to)}
+Registry ${colors.cyan(this.registry)}
+Run ${colors.magenta("eggs update -g " + this.moduleName)} to update`;
+
+    console.log("")
+    Table.from([[notification]])
+      .padding(1)
+      .indent(2)
+      .border( true )
+      .render();
   }
 }
