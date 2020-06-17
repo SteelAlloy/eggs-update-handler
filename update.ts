@@ -7,7 +7,7 @@ export class UpdateNotifier {
   lastUpdateCheck = Date.now();
   updateCheckInterval = 5;
 
-  constructor(public execName: string, public moduleName: string) {}
+  constructor(public execName: string, public moduleURL: string) {}
 
   async readConfig(): Promise<any> {
     return readJson(this.configPath());
@@ -49,7 +49,7 @@ export class UpdateNotifier {
 
   async getLatestVersionFromNestRegistry(): Promise<string> {
     const res = await fetch(
-      "https://x.nest.land/api/package/" + this.moduleName,
+      "https://x.nest.land/api/package/" + this.moduleURL,
     );
     const json = await res.json();
     return json.latestVersion.split("@")[1];

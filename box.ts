@@ -1,5 +1,7 @@
 import * as color from "https://deno.land/std/fmt/colors.ts";
 
+// https://www.npmjs.com/package/box-console
+
 export default function boxConsole (messages: string[]): string {
   let tips = [];
   let maxLen = 0;
