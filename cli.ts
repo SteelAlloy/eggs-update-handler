@@ -1,4 +1,4 @@
-import { UpdateNotifier } from "./update.ts";
+import { UpdateNotifier } from "./lib/update.ts";
 
 const onWindows = Deno.build.os === "windows";
 const [execName, updateCheckInterval, ...args] = Deno.args;
@@ -24,12 +24,3 @@ await notifier.init();
 await notifier.checkForUpdate();
 
 Deno.exit(status.code);
-
-/**
- * 1. eggs install --allow-write --allow-read --unstable -n remove https://x.nest.land/remove-forever@1.0.0/cli.ts
- * 
- * 2. deno install --allow-write --allow-read --unstable -n __remove https://x.nest.land/remove-forever@1.0.0/cli.ts
- *    deno install --allow-all -n remove https://x.nest.land/nest-update-notifier@1.0.0/cli.ts __remove
- * 
- * 3. remove.cmd rm -s forever
- */
