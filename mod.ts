@@ -9,10 +9,12 @@ export async function installUpdateHandler(
     cmd: [
       "deno",
       "install",
+      "--unstable",
+      "-f",
       "-A",
       "-n",
       moduleName,
-      "https://x.nest.land/eggs-update-handler@1.0.0/cli.ts",
+      "https://x.nest.land/eggs-update-handler@0.1.5/cli.ts",
       execName,
       updateCheckInterval.toString()
     ],
