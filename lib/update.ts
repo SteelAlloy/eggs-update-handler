@@ -8,6 +8,7 @@ export class UpdateNotifier {
   registry = "";
   installationArgs: string[] = [];
   lastUpdateCheck = Date.now();
+  config: any = {}
 
   constructor(
     public execName: string,
@@ -33,6 +34,7 @@ export class UpdateNotifier {
 
   async init() {
     const config = await this.readConfig();
+    this.config = config
     const module = config[this.execName];
 
     if (module) {
@@ -41,18 +43,9 @@ export class UpdateNotifier {
       this.currentVersion = module.version;
       this.registry = module.registry;
       this.installationArgs = module.args;
+      this.lastUpdateCheck = module.lastUpdateCheck;
     } else {
       throw new Error("Some fields are missing in the global config file.");
-    }
-
-    if (module.lastUpdateCheck) {
-      this.lastUpdateCheck = module.lastUpdateCheck;
-    }
-
-    config[this.execName].lastUpdateCheck = this.lastUpdateCheck;
-
-    if (module.lastUpdateCheck === undefined && this.needCheck()) {
-      this.writeConfig(config);
     }
   }
 
@@ -71,6 +64,9 @@ export class UpdateNotifier {
         const to = (typeof latest === "string" ? latest : latest.version);
         this.notify(from, to);
       }
+
+      this.config[this.execName].lastUpdateCheck = Date.now();
+      this.writeConfig(this.config);
     }
   }
 
@@ -79,7 +75,7 @@ export class UpdateNotifier {
       colors.red(this.moduleName)
     } available! ${colors.yellow(from)} → ${colors.green(to)}
 Registry ${colors.cyan(this.registry)}
-Run ${colors.magenta("eggs update -g " + this.moduleName)} to update`;
+Run ${colors.magenta("eggs update -g " + this.execName)} to update`;
 
     console.log("")
     Table.from([[notification]])
