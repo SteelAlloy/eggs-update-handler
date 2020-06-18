@@ -8,33 +8,16 @@ export class UpdateNotifier {
   registry = "";
   installationArgs: string[] = [];
   lastUpdateCheck = Date.now();
-  config: any = {}
+  config: any = {};
 
   constructor(
     public execName: string,
     public updateCheckInterval: number,
   ) {}
 
-  async readConfig(): Promise<any> {
-    return readJson(this.configPath());
-  }
-
-  async writeConfig(config: any) {
-    await writeJson(this.configPath(), config, { spaces: 2 });
-  }
-
-  configPath() {
-    const homedir = Deno.dir("home") || "/";
-    return path.join(homedir, "/.eggs-global-modules.json");
-  }
-
-  needCheck() {
-    return Date.now() - this.lastUpdateCheck > this.updateCheckInterval;
-  }
-
   async init() {
     const config = await this.readConfig();
-    this.config = config
+    this.config = config;
     const module = config[this.execName];
 
     if (module) {
@@ -45,17 +28,25 @@ export class UpdateNotifier {
       this.installationArgs = module.args;
       this.lastUpdateCheck = module.lastUpdateCheck;
     } else {
-      throw new Error("Some fields are missing in the global config file.");
+      console.error(`${this.execName} is missing in the global config file.`);
+      Deno.exit(1)
     }
   }
 
   async checkForUpdate() {
     if (this.needCheck()) {
-      const latestVersion = await getLatestVersion(
-        this.registry,
-        this.moduleName,
-        this.owner,
-      );
+      let latestVersion: string
+      try {
+        latestVersion = await getLatestVersion(
+          this.registry,
+          this.moduleName,
+          this.owner,
+        );
+      } catch (err) {
+        // TODO
+        console.error("Update retrieval failed.");
+        Deno.exit()
+      }
       const current = semver.coerce(this.currentVersion) || "0.0.1";
       const latest = semver.coerce(latestVersion) || "0.0.1";
 
@@ -77,11 +68,28 @@ export class UpdateNotifier {
 Registry ${colors.cyan(this.registry)}
 Run ${colors.magenta("eggs update -g " + this.execName)} to update`;
 
-    console.log("")
+    console.log("");
     Table.from([[notification]])
       .padding(1)
       .indent(2)
-      .border( true )
+      .border(true)
       .render();
+  }
+
+  async readConfig(): Promise<any> {
+    return readJson(this.configPath());
+  }
+
+  async writeConfig(config: any) {
+    await writeJson(this.configPath(), config, { spaces: 2 });
+  }
+
+  configPath() {
+    const homedir = Deno.dir("home") || "/";
+    return path.join(homedir, "/.eggs-global-modules.json");
+  }
+
+  needCheck() {
+    return Date.now() - this.lastUpdateCheck > this.updateCheckInterval;
   }
 }

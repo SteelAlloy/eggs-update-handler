@@ -3,8 +3,8 @@ import { UpdateNotifier } from "./lib/update.ts";
 const onWindows = Deno.build.os === "windows";
 const [execName, updateCheckInterval, ...args] = Deno.args;
 
-if (!execName) {
-  console.log("Error, no module");
+if (!execName || !updateCheckInterval) {
+  console.error("Error, no module");
   Deno.exit(1);
 }
 
