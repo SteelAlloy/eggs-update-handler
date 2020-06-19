@@ -1,24 +1,35 @@
-import { UpdateNotifier } from "./lib/update.ts";
+import { colors } from "./lib/deps.ts";
+import { UpdateNotifier, box } from "./lib/update.ts";
 
 const onWindows = Deno.build.os === "windows";
 const [execName, updateCheckInterval, ...args] = Deno.args;
 
 if (!execName || !updateCheckInterval) {
-  console.error("Error, no module");
+  box(`${colors.red("Error")} incorrect number of arguments.`);
   Deno.exit(1);
 }
 
-const process = Deno.run({
-  cmd: [
-    execName + (onWindows ? ".cmd" : ""),
-    ...args,
-  ],
-});
+let status: Deno.ProcessStatus;
 
-const status = await process.status();
-process.close();
+try {
+  const process = Deno.run({
+    cmd: [
+      execName + (onWindows ? ".cmd" : ""),
+      ...args,
+    ],
+  });
 
-const notifier = new UpdateNotifier(execName, Number.parseInt(updateCheckInterval));
+  status = await process.status();
+  process.close();
+} catch {
+  box(`${colors.red("Error")} ${execName} doesn't exist.`);
+  Deno.exit(1);
+}
+
+const notifier = new UpdateNotifier(
+  execName,
+  Number.parseInt(updateCheckInterval),
+);
 
 await notifier.init();
 await notifier.checkForUpdate();

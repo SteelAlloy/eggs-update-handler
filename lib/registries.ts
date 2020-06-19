@@ -20,8 +20,7 @@ export async function getLatestVersion(
       return getLatestVersionOfGitHubRepo(owner, moduleName);
 
     default:
-      console.error(`Unsupported registry: ${registry}`);
-      Deno.exit(1);
+      throw new Error(`Unsupported registry: ${registry}`);
   }
 }
 
@@ -42,8 +41,7 @@ export function analyzeURL(url: string) {
       return { registry, ...analyzeRawGithubusercontent(tmpSplit) };
 
     default:
-      console.error(`Unsupported registry: ${registry}`);
-      Deno.exit(1);
+      throw new Error(`Unsupported registry: ${registry}`);
   }
 }
 
@@ -57,7 +55,7 @@ export async function getDenoRegistry() {
     "https://raw.githubusercontent.com/denoland/deno_website2/master/database.json",
   );
   denoRegistry = await denoDatabaseResponse.json();
-  return denoRegistry
+  return denoRegistry;
 }
 
 /** Get the latest tag/release of a GitHub repository */
@@ -87,7 +85,7 @@ export async function getLatestStdVersion(): Promise<string> {
 export async function getLatestXVersion(
   dependencyName: string,
 ): Promise<string> {
-  const denoRegistry = await getDenoRegistry()
+  const denoRegistry = await getDenoRegistry();
   const owner = denoRegistry[dependencyName].owner;
   const repo = denoRegistry[dependencyName].repo;
   return getLatestVersionOfGitHubRepo(owner, repo);

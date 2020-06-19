@@ -28,24 +28,27 @@ export class UpdateNotifier {
       this.installationArgs = module.args;
       this.lastUpdateCheck = module.lastUpdateCheck;
     } else {
-      console.error(`${this.execName} is missing in the global config file.`);
-      Deno.exit(1)
+      box(
+        `${
+          colors.red("Error")
+        } ${this.execName} is missing in the global config file.`,
+      );
+      Deno.exit(1);
     }
   }
 
   async checkForUpdate() {
     if (this.needCheck()) {
-      let latestVersion: string
+      let latestVersion: string;
       try {
         latestVersion = await getLatestVersion(
           this.registry,
           this.moduleName,
           this.owner,
         );
-      } catch (err) {
-        // TODO
-        console.error("Update retrieval failed.");
-        Deno.exit()
+      } catch {
+        // Unsupported registry or user offline
+        return;
       }
       const current = semver.coerce(this.currentVersion) || "0.0.1";
       const latest = semver.coerce(latestVersion) || "0.0.1";
@@ -68,16 +71,21 @@ export class UpdateNotifier {
 Registry ${colors.cyan(this.registry)}
 Run ${colors.magenta("eggs update -g " + this.execName)} to update`;
 
-    console.log("");
-    Table.from([[notification]])
-      .padding(1)
-      .indent(2)
-      .border(true)
-      .render();
+    box(notification);
   }
 
   async readConfig(): Promise<any> {
-    return readJson(this.configPath());
+    try {
+      const config = await readJson(this.configPath());
+      return config;
+    } catch {
+      box(
+        `${
+          colors.red("Error")
+        } config file doesn't exist.\nPlease reinstall the module.`,
+      );
+      Deno.exit(1);
+    }
   }
 
   async writeConfig(config: any) {
@@ -92,4 +100,13 @@ Run ${colors.magenta("eggs update -g " + this.execName)} to update`;
   needCheck() {
     return Date.now() - this.lastUpdateCheck > this.updateCheckInterval;
   }
+}
+
+export function box(text: string) {
+  console.log("");
+  Table.from([[text]])
+    .padding(1)
+    .indent(2)
+    .border(true)
+    .render();
 }
